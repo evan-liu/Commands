@@ -81,6 +81,9 @@ class CommandsTests: XCTestCase {
         _ = try? commands.run(args: ["test", "plugin", "-h"].dropFirst())
         XCTAssert(usage.contains("  reset: Reset all plugins"))
         
+        _ = try? commands.run(args: ["test", "clean", "help"].dropFirst())
+        XCTAssert(usage.contains("test clean"))
+        
         //-- run
         _ = try? commands.run(args: ["test", "clean"].dropFirst())
         XCTAssertEqual(CommandsTests.runData.last, "clean")
@@ -98,6 +101,15 @@ class CommandsTests: XCTestCase {
         XCTAssertEqual(CommandsTests.runData.last, "plugin reset")
         
         _ = try? commands.run(args: ["test", "plugin", "add", "--help"].dropFirst())
+        XCTAssert(usage.contains("Options:"))
+        
+        //-- throws
+        do {
+            try commands.run(args: ["test", "xxx"].dropFirst())
+            XCTFail()
+        } catch {
+            XCTAssertEqual("\(error)", "command not found")
+        }
     }
     
 }

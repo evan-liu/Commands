@@ -1,13 +1,18 @@
 import Foundation
 import CommandArguments
 
+/// `Arguments` type can be created with `init()`.
 public protocol RunnableArguments: CommandArguments {
     init()
 }
 
+/// `Runnable` type with associated `RunnableArguments`.
 public protocol RunnableWithArgs: Runnable {
+    
+    /// `Arguments` type can be created with `init()`.
     associatedtype Arguments: RunnableArguments
     
+    /// Run with created and parsed `Arguments`.
     func run(argv: Arguments) throws
 }
 

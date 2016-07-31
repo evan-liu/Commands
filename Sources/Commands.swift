@@ -1,67 +1,109 @@
 import Foundation
 
+/// A type that can be added to `Commands` and `run()`.
 public protocol Runnable {
     
+    /// Need to be able to `init()` when run it.
     init()
     
+    /// Run with the arguments slice (command path dropped).
     func run(args: ArraySlice<String>) throws
     
+    /// Usage message with joined command name (like `swift package init`).
     func usage(commandName: String?) -> String
 }
 
 extension Runnable {
+    
+    /// Default usage message.
     public func usage(commandName: String?) -> String {
         return "Usage: \(commandName ?? "command")"
     }
 }
 
+/// `RunnableGroup` passing in the `addGroup()` block.
 public protocol RunnableGroup {
     
+    /// Add a `Runnable`.
     @discardableResult
     func add(_ runnableType: Runnable.Type, name: String, desc: String?) -> Self
     
+    /// Add a nested group.
     @discardableResult
     func addGroup(name: String, desc: String?, block: (RunnableGroup)->Void) -> Self
 }
 
 extension RunnableGroup {
+    
+    /// Add a `Runnable` without `desc`.
     @discardableResult
     public func add(_ runnableType: Runnable.Type, name: String) -> Self {
         return self.add(runnableType, name: name, desc: nil)
     }
     
+    /// Add a nested group without `desc`.
     @discardableResult
     public func addGroup(name: String, block: (RunnableGroup)->Void) -> Self {
         return self.addGroup(name: name, desc: nil, block: block)
     }
 }
 
+/// A block to print out usage message.
 public typealias UsagePrinter = (String) -> Void
 
+/** 
+ A group of `Runnable` or nested groups.
+ 
+ Example:
+ 
+ ````
+ do {
+     try Commands(name: "demo")
+         .add(Clean.self, name: "clean")
+         .add(Create.self, name: "create")
+         .addGroup(name: "platform", desc: "platform commands") {
+             $0.add(Platform.Add.self, name: "add")
+         }
+         .addGroup(name: "plugin") {
+             $0.add(Plugin.Add.self, name: "add")
+               .add(Plugin.Reset.self, name: "reset", desc: "Reset all plugins")
+         }
+         .run(Process.arguments.dropFirst())
+ } catch {
+    print(error)
+ }
+ ````
+ */
 public final class Commands {
     
     private let root:Group
     
+    /// Create a new `Commands`.
     public init(name: String, desc: String? = nil, usagePrinter: UsagePrinter? = nil) {
         root = Group(name: name, desc: desc, usagePrinter: usagePrinter ?? { print($0) })
     }
     
+    /// Add a `Runnable`.
     @discardableResult
     public func add(_ runnableType: Runnable.Type, name: String, desc: String? = nil) -> Self {
         root.add(runnableType, name: name, desc: desc)
         return self
     }
     
+    /// Add a nested group.
     @discardableResult
     public func addGroup(name: String, desc: String? = nil, block: (RunnableGroup)->Void) -> Self {
         root.addGroup(name: name, desc: desc, block: block)
         return self
     }
     
+    /// Run with the arguments slice (need to drop command path).
     public func run(args: ArraySlice<String>) throws {
         try root.run(args: args)
     }
     
+    /// Print usage message. Use `print()` method by default. 
+    /// Pass `usagePrinter` in `init()` to print in another way.
     public func printUsage() {
         root.printUsage()
     }

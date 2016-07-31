@@ -14,17 +14,17 @@ import Commands
 import CommandArguments
 
 do {
-  try Commands(name: "demo")
-    .add(Clean.self, name: "clean")
-    .add(Create.self, name: "create")
-    .addGroup(name: "platform", desc: "platform commands") {
-        $0.add(Platform.Add.self, name: "add")
-    }
-    .addGroup(name: "plugin") {
-        $0.add(Plugin.Add.self, name: "add")
-          .add(Plugin.Reset.self, name: "reset", desc: "Reset all plugins")
-    }
-    .run(Process.arguments.dropFirst())
+    try Commands(name: "demo")
+        .add(Clean.self, name: "clean")
+        .add(Create.self, name: "create")
+        .addGroup(name: "platform", desc: "platform commands") {
+            $0.add(Platform.Add.self, name: "add")
+        }
+        .addGroup(name: "plugin") {
+            $0.add(Plugin.Add.self, name: "add")
+              .add(Plugin.Reset.self, name: "reset", desc: "Reset all plugins")
+        }
+        .run(Process.arguments.dropFirst())
 } catch {
     print(error)
 }
