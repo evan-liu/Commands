@@ -90,7 +90,7 @@ Commands:
     reset: Reset all plugins
 
 Command usage: 
-  test [command] --help
+  demo [command] --help
 ```
 
 `$ demo plugin add --help`
