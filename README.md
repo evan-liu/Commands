@@ -72,6 +72,21 @@ struct Plugin {
 
 ```
 
+`$ demo --help`
+
+```
+Usage: demo [command]
+
+Commands:
+  clean
+  create
+  platform: platform commands
+    add
+  plugin
+    add
+    reset: Reset all plugins
+```
+
 ## Install 
 
 ### Swift Package Manager: 
