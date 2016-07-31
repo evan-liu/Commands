@@ -6,6 +6,13 @@ public protocol Runnable {
     
     func run(args: ArraySlice<String>) throws
     
+    func usage(commandName: String?) -> String
+}
+
+extension Runnable {
+    public func usage(commandName: String?) -> String {
+        return "Usage: \(commandName ?? "command")"
+    }
 }
 
 public protocol RunnableGroup {
@@ -64,16 +71,22 @@ public final class Commands {
 // ----------------------------------------
 // MARK: Private
 // ----------------------------------------
-private protocol CommandsElement {
-    var name: String { get }
-    var desc: String? { get }
+private class CommandsElement {
+    let name: String
+    let desc: String?
+    let parent:Group?
+    let usagePrinter: UsagePrinter
     
-    func synopsis(depth: Int) -> String
+    init(name: String, desc: String?, usagePrinter: UsagePrinter, parent:Group? = nil) {
+        self.name = name
+        self.desc = desc
+        self.usagePrinter = usagePrinter
+        self.parent = parent
+    }
     
-    func run(args: ArraySlice<String>) throws
-}
-
-extension CommandsElement {
+    func run(args: ArraySlice<String>) throws {
+    }
+    
     func synopsis(depth: Int) -> String {
         return synopsisTitle(depth: depth)
     }
@@ -90,42 +103,45 @@ extension CommandsElement {
     func indent(depth: Int) -> String {
         return String(repeating: " " as Character, count: depth * 2)
     }
+    
+    func isHelp(_ args: ArraySlice<String>) -> Bool {
+        return args.count == 1 && ["help", "-h", "--help"].contains(args.last!)
+    }
+    
+    var path: String {
+        return joinAncestors(toPath: [name]).joined(separator: " ")
+    }
+    
+    func joinAncestors(toPath path: [String]) -> [String] {
+        guard let parent = parent else { return path }
+        return parent.joinAncestors(toPath: [parent.name] + path)
+    }
 }
 
 private final class Command: CommandsElement {
-    let name: String
-    let desc: String?
     let runnableType: Runnable.Type
     
-    init(runnableType: Runnable.Type, name: String, desc: String?) {
+    init(runnableType: Runnable.Type, name: String, desc: String?, usagePrinter: UsagePrinter, parent:Group) {
         self.runnableType = runnableType
-        self.name = name
-        self.desc = desc
+        super.init(name: name, desc: desc, usagePrinter: usagePrinter, parent: parent)
     }
     
-    func run(args: ArraySlice<String>) throws {
+    override func run(args: ArraySlice<String>) throws {
         let runnable = runnableType.init()
-        try runnable.run(args: args)
+        if isHelp(args) {
+            usagePrinter(runnable.usage(commandName: path))
+        } else {
+            try runnable.run(args: args)
+        }
     }
 }
 
 private final class Group: CommandsElement, RunnableGroup {
-    let name: String
-    let desc: String?
-    let parent:Group?
     var children = [CommandsElement]()
-    
-    let usagePrinter: UsagePrinter
-    init(name: String, desc: String?, usagePrinter: UsagePrinter, parent:Group? = nil) {
-        self.name = name
-        self.desc = desc
-        self.usagePrinter = usagePrinter
-        self.parent = parent
-    }
     
     @discardableResult
     func add(_ runnableType: Runnable.Type, name: String, desc: String?) -> Self {
-        children.append(Command(runnableType: runnableType, name: name, desc: desc))
+        children.append(Command(runnableType: runnableType, name: name, desc: desc, usagePrinter: usagePrinter, parent: self))
         return self
     }
     
@@ -137,8 +153,8 @@ private final class Group: CommandsElement, RunnableGroup {
         return self
     }
     
-    func run(args: ArraySlice<String>) throws {
-        if isHelp(args) { return printUsage() }
+    override func run(args: ArraySlice<String>) throws {
+        if args.count == 0 || isHelp(args) { return printUsage() }
         
         let name = args.first!
         for child in children {
@@ -151,29 +167,27 @@ private final class Group: CommandsElement, RunnableGroup {
         throw CommandsError.notFound
     }
     
-    private func isHelp(_ args: ArraySlice<String>) -> Bool {
-        if args.count == 0 { return true }
-        return args.count == 1 && ["help", "-h", "--help"].contains(args.last!)
-    }
-    
     private func printUsage() {
-        let path = getPath([name])
-        let lines = [
-            "Usage: " + path.joined(separator: " ") + " [command]",
+        let path = self.path
+        var lines = [String]()
+        if let desc = desc {
+            lines += [desc, ""]
+        }
+        lines += [
+            "Usage: \(path) [command] [options] [operands]",
             "",
             "Commands:"
-        ] + children.map { $0.synopsis(depth: 1) }
+        ]
+        lines += children.map { $0.synopsis(depth: 1) }
+        lines += [
+            "",
+            "Command usage: ",
+            "  \(path) [command] --help"
+        ]
         usagePrinter(lines.joined(separator: "\n"))
     }
     
-    private func getPath(_ path: [String]) -> [String] {
-        guard let parent = parent else {
-            return path
-        }
-        return parent.getPath([parent.name] + path)
-    }
-    
-    private func synopsis(depth: Int) -> String {
+    private override func synopsis(depth: Int) -> String {
         let lines = [synopsisTitle(depth: depth)] + children.map { $0.synopsis(depth: depth + 1) }
         return lines.joined(separator: "\n")
     }

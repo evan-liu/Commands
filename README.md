@@ -10,6 +10,9 @@ Command groups work together with [CommandArguments](https://github.com/evan-liu
 
 ```swift
 
+import Commands
+import CommandArguments
+
 do {
   try Commands(name: "demo")
     .add(Clean.self, name: "clean")
@@ -75,7 +78,7 @@ struct Plugin {
 `$ demo --help`
 
 ```
-Usage: demo [command]
+Usage: demo [command] [options] [operands]
 
 Commands:
   clean
@@ -85,6 +88,21 @@ Commands:
   plugin
     add
     reset: Reset all plugins
+
+Command usage: 
+  test [command] --help
+```
+
+`$ demo plugin add --help`
+
+```
+Usage: demo plugin add [options] name
+
+Operands:
+  name  plugin name
+
+Options:
+  --save  if save to package config
 ```
 
 ## Install 

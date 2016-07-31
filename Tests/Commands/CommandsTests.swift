@@ -44,8 +44,8 @@ class CommandsTests: XCTestCase {
     struct Plugin {
         struct Add: RunnableWithArgs {
             struct Arguments: RunnableArguments {
-                var name = Operand()
-                var save = Flag()
+                var name = Operand(usage: "plugin name")
+                var save = Flag(usage: "if save to package config")
             }
             func run(argv: Arguments) throws {
                 CommandsTests.runData.append("plugin add \(argv.name.value!) --save=\(argv.save.value)")
@@ -59,7 +59,7 @@ class CommandsTests: XCTestCase {
     }
     
     func testCommands() {
-        var usage: String?
+        var usage: String = ""
         let commands = Commands(name: "test", desc: "test commands", usagePrinter: { usage = $0 })
             .add(Clean.self, name: "clean")
             .add(Create.self, name: "create")
@@ -73,13 +73,13 @@ class CommandsTests: XCTestCase {
         
         //-- usage
         commands.printUsage()
-        XCTAssertEqual(usage?.components(separatedBy: "\n").last, "    reset: Reset all plugins")
+        XCTAssert(usage.contains("    reset: Reset all plugins"))
         
         _ = try? commands.run(args: ["test", "platform", "--help"].dropFirst())
-        XCTAssertEqual(usage?.components(separatedBy: "\n").first, "Usage: test platform [command]")
+        XCTAssert(usage.contains("Usage: test platform [command]"))
         
         _ = try? commands.run(args: ["test", "plugin", "-h"].dropFirst())
-        XCTAssertEqual(usage?.components(separatedBy: "\n").last, "  reset: Reset all plugins")
+        XCTAssert(usage.contains("  reset: Reset all plugins"))
         
         //-- run
         _ = try? commands.run(args: ["test", "clean"].dropFirst())
@@ -96,6 +96,8 @@ class CommandsTests: XCTestCase {
         
         _ = try? commands.run(args: ["test", "plugin", "reset"].dropFirst())
         XCTAssertEqual(CommandsTests.runData.last, "plugin reset")
+        
+        _ = try? commands.run(args: ["test", "plugin", "add", "--help"].dropFirst())
     }
     
 }

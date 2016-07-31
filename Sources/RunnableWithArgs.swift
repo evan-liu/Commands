@@ -19,4 +19,8 @@ extension RunnableWithArgs {
         try run(argv: argv)
     }
     
+    public func usage(commandName: String? = nil) -> String {
+        return Arguments.init().usage(commandName: commandName)
+    }
+    
 }
