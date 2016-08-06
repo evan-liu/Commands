@@ -1,7 +1,7 @@
 import Foundation
 
 /// Errors throws when call `Commands.run()`.
-public enum CommandsError: ErrorProtocol {
+public enum CommandsError: Error {
     
     /// Command not found (invalid name or path).
     case notFound
