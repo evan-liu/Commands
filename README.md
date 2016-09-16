@@ -1,7 +1,8 @@
 # Commands
 
-![Platform](https://img.shields.io/badge/platform-macos%20%7C%20linux-lightgrey.svg)
-[![Swift](https://img.shields.io/badge/swift-3.0--PREVIEW--4-yellowgreen.svg)](https://swift.org/download/#previews)
+[![Platform](https://img.shields.io/badge/platform-macos%20%7C%20linux-lightgrey.svg)](https://travis-ci.org/evan-liu/CommandArguments)
+[![Swift](https://img.shields.io/badge/swift-3.0-yellowgreen.svg)](https://swift.org/download/#releases)
+[![Codecov](https://img.shields.io/codecov/c/github/evan-liu/Commands.svg)](https://codecov.io/gh/evan-liu/Commands)
 [![Build Status](https://travis-ci.org/evan-liu/Commands.svg)](https://travis-ci.org/evan-liu/Commands)
 
 Command groups work together with [CommandArguments](https://github.com/evan-liu/CommandArguments). 
@@ -24,7 +25,7 @@ do {
             $0.add(Plugin.Add.self, name: "add")
               .add(Plugin.Reset.self, name: "reset", desc: "Reset all plugins")
         }
-        .run(Process.arguments.dropFirst())
+        .run(ProcessInfo.processInfo.arguments.dropFirst())
 } catch {
     print(error)
 }
