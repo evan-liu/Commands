@@ -1,5 +1,5 @@
 import XCTest
-@testable import CommandsTestSuite
+@testable import CommandsTests
 
 XCTMain([
      testCase(CommandsTests.allTests),

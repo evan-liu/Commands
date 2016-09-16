@@ -119,7 +119,7 @@ private class CommandsElement {
     let parent:Group?
     let usagePrinter: UsagePrinter
     
-    init(name: String, desc: String?, usagePrinter: UsagePrinter, parent:Group? = nil) {
+    init(name: String, desc: String?, usagePrinter: @escaping UsagePrinter, parent:Group? = nil) {
         self.name = name
         self.desc = desc
         self.usagePrinter = usagePrinter
@@ -143,7 +143,7 @@ private class CommandsElement {
     }
     
     func indent(depth: Int) -> String {
-        return String(repeating: " " as Character, count: depth * 2)
+        return String(repeating: " ", count: depth * 2)
     }
     
     func isHelp(_ args: ArraySlice<String>) -> Bool {
@@ -163,7 +163,7 @@ private class CommandsElement {
 private final class Command: CommandsElement {
     let runnableType: Runnable.Type
     
-    init(runnableType: Runnable.Type, name: String, desc: String?, usagePrinter: UsagePrinter, parent:Group) {
+    init(runnableType: Runnable.Type, name: String, desc: String?, usagePrinter: @escaping UsagePrinter, parent:Group) {
         self.runnableType = runnableType
         super.init(name: name, desc: desc, usagePrinter: usagePrinter, parent: parent)
     }
@@ -209,7 +209,7 @@ private final class Group: CommandsElement, RunnableGroup {
         throw CommandsError.notFound
     }
     
-    private func printUsage() {
+    fileprivate func printUsage() {
         let path = self.path
         var lines = [String]()
         if let desc = desc {
